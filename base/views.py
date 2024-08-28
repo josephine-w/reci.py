@@ -6,6 +6,16 @@ from django.views.generic.edit import DeleteView
 from .models import *
 import random
 from .recipelist import *
+from django.shortcuts import redirect, render
+from .request import *
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
+def index(request):
+    return render(request, "home.html")
 
 class HomePage(TemplateView):
     model = FoodItem
@@ -25,8 +35,8 @@ class HomePage(TemplateView):
                 ingredients.append(i.name)
             random_num = random.randint(1, len(ingredients))
             input_list = random.sample(ingredients, k=random_num)
-
             inputSearch(input_list, "one")
+            create_payload(input_list)
             
         return HttpResponseRedirect(request.path_info)
     
@@ -40,16 +50,17 @@ class RecipeFinderHome(TemplateView):
     def post(self, request):
         if 'add_button' in request.POST:
             user_input = request.POST.get("input", "")
-            print(user_input)
+            print("---added: ", user_input)
             Ingredient.objects.create(name=user_input).save()
         elif 'done_button' in request.POST:
             RecipeList.objects.all().delete()
             all_entries = Ingredient.objects.all()
             input_list=[]
             for a in all_entries:
-                print(a.name)
+                print("---ing: ", a.name)
                 input_list.append(a.name)
             inputSearch(input_list, "many")
+            create_payload(input_list)
         elif 'desc_button' in request.POST:
             print("yes")
             recipe = RecipeList.objects.all().order_by('prep_min')
